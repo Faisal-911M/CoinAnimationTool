@@ -1,0 +1,73 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CoinAnimation : MonoBehaviour
+{
+    [SerializeField]
+    private GameObject coinPrefab;   // Prefab of the coin to animate
+    [SerializeField]
+    private Transform startPoint;    // The starting point (bottom of the screen)
+    [SerializeField]
+    private Transform endPoint;      // The ending point (coin counter at the top)
+    
+    [SerializeField]
+    private float animationDuration = 1.0f;  // Duration of animation
+    [SerializeField]
+    private int numberOfCoins = 10;  // Number of coins to animate at once
+    [SerializeField]
+    private Vector2 spreadRange = new Vector2(50f, 100f); // Spread of coins from the start point
+
+    // Method to trigger the coin animation
+    private void Start()
+    {
+        AnimateCoins();
+    }
+
+    public void AnimateCoins()
+    {
+        StartCoroutine(AnimateMultipleCoins());
+    }
+
+    // Coroutine to animate multiple coins
+    IEnumerator AnimateMultipleCoins()
+    {
+        List<GameObject> coins = new List<GameObject>();
+
+        // Instantiate all coins with a slight spread
+        for (int i = 0; i < numberOfCoins; i++)
+        {
+            Vector3 randomOffset = new Vector3(Random.Range(-spreadRange.x, spreadRange.x), Random.Range(-spreadRange.y, spreadRange.y), 0);
+            GameObject animatedCoin = Instantiate(coinPrefab, startPoint.position + randomOffset, Quaternion.identity, startPoint.parent);
+            coins.Add(animatedCoin);
+        }
+
+        float elapsedTime = 0;
+
+        // Animate each coin
+        while (elapsedTime < animationDuration)
+        {
+            foreach (GameObject coin in coins)
+            {
+                if (coin != null)
+                {
+                    Vector3 targetPosition = endPoint.position;
+                    coin.transform.position = Vector3.Lerp(coin.transform.position, targetPosition, elapsedTime / animationDuration);
+                }
+            }
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // Ensure all coins reach the exact end position and destroy them
+        foreach (GameObject coin in coins)
+        {
+            if (coin != null)
+            {
+                coin.transform.position = endPoint.position;
+                Destroy(coin);
+            }
+        }
+    }
+}
